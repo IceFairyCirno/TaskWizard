@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="24dp"
+    card_view:cardCornerRadius="16dp"
+    card_view:cardElevation="0dp"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/MainContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter Your Event"
+            android:layout_gravity="center_horizontal"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16sp"
+            android:layout_marginBottom="16sp"
+            tools:ignore="HardcodedText" />
+        <EditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints=""
+            android:hint="Enter Title"
+            android:inputType="text"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp"
+            android:layout_gravity="center_horizontal"
+            android:textSize="16sp"
+            android:layout_marginHorizontal="32sp"
+            tools:ignore="HardcodedText" />
+
+        <LinearLayout
+            android:id="@+id/SelectDateTimeContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginHorizontal="32sp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/etDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select Date"
+                android:textColor="@color/white"
+                android:padding="8dp"
+                android:textSize="16sp"
+                card_view:cornerRadius="8sp"
+                android:backgroundTint="@color/main_theme"
+                tools:ignore="HardcodedText" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/etTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select Time"
+                android:textColor="@color/white"
+                android:padding="8dp"
+                android:textSize="16sp"
+                card_view:cornerRadius="8sp"
+                android:backgroundTint="@color/main_theme"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Notification Preference:"
+            android:layout_marginHorizontal="32sp"
+            android:textSize="18sp"
+            android:layout_marginTop="12dp"
+            tools:ignore="HardcodedText" />
+        <CheckBox
+            android:id="@+id/EnableNotificationCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enable Notifications (Default: On Time Notify)"
+            android:layout_marginHorizontal="32sp"
+            tools:ignore="HardcodedText"
+            android:textSize="12sp"/>
+
+        <GridLayout
+            android:id="@+id/NotificationButtonsContainer"
+            android:layout_marginHorizontal="32sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:rowCount="2">
+            <CheckBox
+                android:id="@+id/ConstantNotifyCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Constant Notify (hourly)"
+                android:layout_row="0"
+                android:layout_column="0"
+                android:layout_marginEnd="8sp"
+                tools:ignore="HardcodedText"
+                android:textSize="12sp"/>
+            <CheckBox
+                android:id="@+id/HourBeforeNotifyCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="An Hour Before"
+                android:layout_row="0"
+                android:layout_column="1"
+                android:layout_marginEnd="8sp"
+                tools:ignore="HardcodedText"
+                android:textSize="12sp"/>
+            <CheckBox
+                android:id="@+id/DayBeforeNotifyCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="A Day Before"
+                android:layout_row="1"
+                android:layout_column="0"
+                android:layout_marginEnd="8sp"
+                tools:ignore="HardcodedText"
+                android:textSize="12sp"/>
+        </GridLayout>
+
+
+        <LinearLayout
+            android:id="@+id/CancelConfirmContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="12sp"
+            android:layout_marginEnd="8sp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:textSize="14sp"
+                android:backgroundTint="#de2323"
+                card_view:cornerRadius="8sp"
+                android:layout_marginEnd="8sp"
+                tools:ignore="HardcodedText" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConfirm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Confirm"
+                android:textSize="14sp"
+                android:backgroundTint="#30de23"
+                card_view:cornerRadius="8sp"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
