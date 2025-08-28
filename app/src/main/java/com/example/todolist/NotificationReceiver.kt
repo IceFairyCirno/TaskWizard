@@ -24,10 +24,7 @@ class NotificationReceiver : BroadcastReceiver() {
         val title = intent.getStringExtra("notificationTitle") ?: "TaskWizard Reminder"
         val message = intent.getStringExtra("notificationMessage") ?: "It's time for your task!"
         val requestCode = intent.getIntExtra("requestCode", -1)
-        val notificationPreference = intent.getBooleanExtra("notificationPreference", false)
-        val constant = intent.getBooleanExtra("constant", false)
-        val hourbefore = intent.getBooleanExtra("hourbefore", false)
-        val daybefore = intent.getBooleanExtra("daybefore", false)
+        val notification= intent.getStringExtra("notification") ?: "none"
         var safeToDelete = true
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -39,7 +36,7 @@ class NotificationReceiver : BroadcastReceiver() {
             val eventDao = db.eventDao()
             val event = eventDao.getEventByRequestCode(requestCode)
 
-            if ((event != null) and (notificationPreference)){
+            if ((event != null) and (notification != "none")){
                 Log.i("NotificationReceiver", "Showing notification: $title - $message")
 
                 val notificationBuilder = NotificationCompat.Builder(context, channelId)
@@ -52,7 +49,7 @@ class NotificationReceiver : BroadcastReceiver() {
                 val notificationManager = NotificationManagerCompat.from(context)
                 notificationManager.notify(1001, notificationBuilder.build())
 
-                if (constant){
+                if (notification == "constant"){
                     val nextHour = getNextHourFromCurrent()
                     if (event != null) {
                         if (compareDateTimes(nextHour, Pair(event.date, event.time)) <= 0){
@@ -62,10 +59,7 @@ class NotificationReceiver : BroadcastReceiver() {
                                 putExtra("notificationTitle", title)
                                 putExtra("notificationMessage", message)
                                 putExtra("requestCode", requestCode)
-                                putExtra("notificationPreference", notificationPreference)
-                                putExtra("constant", constant)
-                                putExtra("hourbefore", hourbefore)
-                                putExtra("daybefore", daybefore)
+                                putExtra("notification", notification)
                             }
                             val pendingIntent = PendingIntent.getBroadcast(
                                 context,
@@ -74,7 +68,7 @@ class NotificationReceiver : BroadcastReceiver() {
                                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // Update existing PendingIntent
                             )
                             val currentTime = Calendar.getInstance().apply { timeInMillis = System.currentTimeMillis() }
-                            val nextAlarmTime = currentTime.timeInMillis + (60 * 60 * 1000)
+                            val nextAlarmTime = currentTime.timeInMillis + (60* 60 * 1000) // 60*60*1000
                             alarmManager.setExactAndAllowWhileIdle(
                                 AlarmManager.RTC_WAKEUP, nextAlarmTime, pendingIntent
                             )
@@ -84,7 +78,7 @@ class NotificationReceiver : BroadcastReceiver() {
                             Log.i("NotificationReceiver", "Constant Alarm Ends")
                         }
                     }
-                }else if (hourbefore){
+                }else if (notification == "hour"){
                     val now = getCurrentDateTime()
                     if (event != null) {
                         if (compareDateTimes(now, Pair(event.date, event.time)) <= 0){
@@ -94,10 +88,7 @@ class NotificationReceiver : BroadcastReceiver() {
                                 putExtra("notificationTitle", title)
                                 putExtra("notificationMessage", message)
                                 putExtra("requestCode", requestCode)
-                                putExtra("notificationPreference", notificationPreference)
-                                putExtra("constant", constant)
-                                putExtra("hourbefore", hourbefore)
-                                putExtra("daybefore", daybefore)
+                                putExtra("notification", notification)
                             }
                             val pendingIntent = PendingIntent.getBroadcast(
                                 context,
@@ -115,7 +106,7 @@ class NotificationReceiver : BroadcastReceiver() {
                             safeToDelete = true
                         }
                     }
-                }else if (daybefore){
+                }else if (notification == "day"){
                     val now = getCurrentDateTime()
                     if (event != null) {
                         if (compareDateTimes(now, Pair(event.date, event.time)) <= 0){
@@ -125,10 +116,7 @@ class NotificationReceiver : BroadcastReceiver() {
                                 putExtra("notificationTitle", title)
                                 putExtra("notificationMessage", message)
                                 putExtra("requestCode", requestCode)
-                                putExtra("notificationPreference", notificationPreference)
-                                putExtra("constant", constant)
-                                putExtra("hourbefore", hourbefore)
-                                putExtra("daybefore", daybefore)
+                                putExtra("notification", notification)
                             }
                             val pendingIntent = PendingIntent.getBroadcast(
                                 context,
@@ -159,7 +147,7 @@ class NotificationReceiver : BroadcastReceiver() {
                     }
                 }
 
-            } else if (!notificationPreference and (event != null)){
+            } else if ((notification == "none") and (event != null)){
                 Log.i("NotificationReceiver", "Event with notification disabled, not sending notification")
                 val eventToDelete = eventDao.getEventByRequestCode(requestCode)
                 if (eventToDelete != null) {
@@ -197,7 +185,6 @@ class NotificationReceiver : BroadcastReceiver() {
 
         return Pair(currentDate, currentTime)
     }
-
     fun compareDateTimes(dateTime1: Pair<String, String>, dateTime2: Pair<String, String>): Int {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         val dateTimeStr1 = "${dateTime1.first} ${dateTime1.second}"

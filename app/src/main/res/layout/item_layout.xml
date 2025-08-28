@@ -10,29 +10,64 @@
     card_view:cardBackgroundColor="#FFFFFF"
     android:padding="4dp">
 
+    <ImageButton
+        android:id="@+id/EventType"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_computer"
+        android:background="@drawable/bg_circle"
+        android:backgroundTint="#2E2E2E"
+        android:clickable="false"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="8sp"/>
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingVertical="8sp"
-        android:paddingHorizontal="16sp">
+        android:paddingHorizontal="16sp"
+        android:layout_marginStart="45sp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/ic_calendar"
+                android:layout_marginEnd="5dp"/>
+            <TextView
+                android:id="@+id/ItemDeadlineDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:text="Deadline Date"
+                android:layout_gravity="start"
+                android:textColor="#9D9D9D"
+                tools:ignore="HardcodedText"
+                android:layout_marginEnd="8dp"/>
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/ic_time"
+                android:layout_marginEnd="5dp"/>
+            <TextView
+                android:id="@+id/ItemDeadlineTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:text="Deadline Time"
+                android:layout_gravity="start"
+                android:textColor="#9D9D9D"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
         <TextView
             android:id="@+id/ItemTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
+            android:textSize="22sp"
             android:text="Item Title"
             android:layout_gravity="start"
-            tools:ignore="HardcodedText" />
-        <TextView
-            android:id="@+id/ItemDeadline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:text="Item Deadline"
-            android:layout_gravity="start"
-            android:textColor="#8a8a8a"
             tools:ignore="HardcodedText" />
     </LinearLayout>
     <ImageButton

@@ -43,37 +43,191 @@
             android:id="@+id/SelectDateTimeContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
             android:layout_marginHorizontal="32sp">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/etDate"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Select Date"
                 android:textColor="@color/white"
                 android:padding="8dp"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 card_view:cornerRadius="8sp"
                 android:backgroundTint="@color/main_theme"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                android:layout_weight="1"/>
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="0.15"/>
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/etTime"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Select Time"
                 android:textColor="@color/white"
                 android:padding="8dp"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 card_view:cornerRadius="8sp"
                 android:backgroundTint="@color/main_theme"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                android:layout_weight="1"/>
+        </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Event Type: "
+            android:layout_marginHorizontal="32sp"
+            android:textSize="16sp"
+            android:layout_marginTop="12dp"
+            tools:ignore="HardcodedText"
+            android:layout_marginBottom="8sp"/>
+        <LinearLayout
+            android:id="@+id/EventTypeContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32sp"
+            android:orientation="horizontal">
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/HomeEventType"
+                android:layout_width="50dp"
+                android:layout_height="55dp"
+                card_view:cardCornerRadius="8sp"
+                card_view:strokeColor="@android:color/transparent"
+                android:backgroundTint="@color/white">
+                <ImageButton
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_home"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#F5E8C7"
+                    android:layout_gravity="top|center_horizontal"
+                    android:clickable="false"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home"
+                    android:textSize="12sp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:padding="2sp"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/WorkEventType"
+                android:layout_width="50dp"
+                android:layout_height="55dp"
+                card_view:cardCornerRadius="8sp"
+                card_view:strokeColor="@android:color/transparent"
+                android:backgroundTint="@color/white">
+                <ImageButton
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_work"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#4682B4"
+                    android:layout_gravity="top|center_horizontal"
+                    android:clickable="false"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Work"
+                    android:textSize="12sp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:padding="2sp"/>
+            </com.google.android.material.card.MaterialCardView>
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/FriendEventType"
+                android:layout_width="50dp"
+                android:layout_height="55dp"
+                card_view:cardCornerRadius="8sp"
+                card_view:strokeColor="@android:color/transparent"
+                android:backgroundTint="@color/white">
+                <ImageButton
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_people"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#FF6F61"
+                    android:layout_gravity="top|center_horizontal"
+                    android:clickable="false"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Friends"
+                    android:textSize="12sp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:padding="2sp"/>
+            </com.google.android.material.card.MaterialCardView>
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/PersonalEventType"
+                android:layout_width="50dp"
+                android:layout_height="55dp"
+                card_view:cardCornerRadius="8sp"
+                card_view:strokeColor="@android:color/transparent"
+                android:backgroundTint="@color/white">
+                <ImageButton
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_personal"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#A8D5BA"
+                    android:layout_gravity="top|center_horizontal"
+                    android:clickable="false"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Personal"
+                    android:textSize="12sp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:paddingBottom="2sp"/>
+            </com.google.android.material.card.MaterialCardView>
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/StudyEventType"
+                android:layout_width="50dp"
+                android:layout_height="55dp"
+                card_view:cardCornerRadius="8sp"
+                card_view:strokeColor="@android:color/transparent"
+                android:backgroundTint="@color/white">
+                <ImageButton
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_computer"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#2E2E2E"
+                    android:layout_gravity="top|center_horizontal"
+                    android:clickable="false"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Study"
+                    android:textSize="12sp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:paddingBottom="2sp"/>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Notification Preference:"
             android:layout_marginHorizontal="32sp"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:layout_marginTop="12dp"
             tools:ignore="HardcodedText" />
         <CheckBox

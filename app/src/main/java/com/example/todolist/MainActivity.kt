@@ -8,10 +8,9 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -32,7 +31,7 @@ import com.example.todolist.Debugger
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import com.example.todolist.databinding.ItemLayoutBinding
-import androidx.core.net.toUri
+import androidx.core.graphics.toColorInt
 
 
 class MainActivity : AppCompatActivity() {
@@ -45,7 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var db: AppDatabase
     private lateinit var eventDao: EventDao
 
-    private val TAG = "To Do List"
+    private val TAG = "MainActivity.kt"
 
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()){
         isGranted: Boolean ->
@@ -56,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Log.i(TAG, "Creating MainActivity")
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         dialogBinding = DialogLayoutBinding.inflate(layoutInflater)
@@ -65,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         val debugger = Debugger()
 
         // Init Database
+        Log.i(TAG, "Initializing Database")
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
@@ -73,17 +74,19 @@ class MainActivity : AppCompatActivity() {
         eventDao = db.eventDao()
 
         // Check Permission for Notifications
+        Log.i(TAG, "Checking Permission")
         checkNotificationPermission()
+        Log.i(TAG, "Creating Notification Channel")
         createNotificationChannel()
 
         // Setup the adapter
         adapter = ItemAdapter(emptyList(), onButtonClick = { event ->
             lifecycleScope.launch {
-                Log.i(TAG, "Deleting Event: ${event.title}, ${event.date}, ${event.time}")
+                Log.i(TAG, "Deleting Event: ${event.title}, ${event.date}, ${event.time}, ${event.type}")
                 eventDao.delete(event)
                 val eventsFromDb = eventDao.getAllEvents()
                 runOnUiThread { adapter.updateItems(eventsFromDb)}
-                Log.i(TAG, "Event Deleted")
+                Log.i(TAG, "Event Successfully Deleted")
             }
         })
         binding.List.layoutManager = LinearLayoutManager(this)
@@ -91,6 +94,7 @@ class MainActivity : AppCompatActivity() {
 
 
         // Get All Events from the Database then display on screen
+        Log.i(TAG, "Reading Database and Displaying Events")
         lifecycleScope.launch {
             //eventDao.clearAllEvents()
             val eventsFromDb = eventDao.getAllEvents()
@@ -98,25 +102,32 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.AddNewItemButton.setOnClickListener {
-            showInputDialog{title, date, time, notification, notifyTypes->
-                Log.i("Added TODO Item", "Title: $title, Date: $date, Time: $time")
+            showInputDialog{title, date, time, notification, eventType->
+                Log.i(TAG, "Attempting to Add Event: ${title}, ${date}, ${time}, $eventType")
                 lifecycleScope.launch {
-                    val requestCode = eventDao.insert(EventEntity(0, title, date, time))
-                    if (notifyTypes[0]){
+                    val event = EventEntity(0, title, date, time, eventType, notification)
+                    val requestCode = eventDao.insert(event)
+                    Log.i(TAG, "Added Event to Database: ${event.title}, ${event.date}, ${event.time}, ${event.type}")
+                    if (event.notification == "constant"){
+                        Log.i(TAG, "Event Notification Type: Constant Notify")
                         val nextHour = getNextHourFromCurrent()
-                        scheduleNotification(requestCode, nextHour.first, nextHour.second, title, notification, notifyTypes)
-                    } else if (notifyTypes[1]){
+                        scheduleNotification(requestCode, nextHour.first, nextHour.second, title, notification)
+                    } else if (event.notification == "hour"){
+                        Log.i(TAG, "Event Notification Type: Hour Before Notify")
                         val hourBefore = getPreviousHourDateTime(date, time, "hour")
-                        scheduleNotification(requestCode, hourBefore.first, hourBefore.second, title, notification, notifyTypes)
-                    } else if (notifyTypes[2]) {
+                        scheduleNotification(requestCode, hourBefore.first, hourBefore.second, title, notification)
+                    } else if (event.notification == "day") {
+                        Log.i(TAG, "Event Notification Type: Day Before Notify")
                         val dayBefore = getPreviousHourDateTime(date, time, "day")
-                        scheduleNotification(requestCode, dayBefore.first, dayBefore.second, title, notification, notifyTypes)
+                        scheduleNotification(requestCode, dayBefore.first, dayBefore.second, title, notification)
                     } else{
-                        scheduleNotification(requestCode, date, time, title, notification, notifyTypes)
+                        Log.i(TAG, "Event Notification Type: Default/None Notify")
+                        scheduleNotification(requestCode, date, time, title, notification)
                     }
+                    Log.i(TAG, "Updating the Current Events On Screen")
                     val updatedList = eventDao.getAllEvents()
                     runOnUiThread { adapter.updateItems(updatedList) }
-                    //displayAllEvents(eventDao)
+                    displayAllEvents(eventDao)
                 }
             }
         }
@@ -160,8 +171,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showInputDialog(onResult: (title: String, date: String, time: String, notification: Boolean, notifyTypes: List<Boolean>) -> Unit){
+    private fun showInputDialog(onResult: (title: String, date: String, time: String, notification: String, eventType: String) -> Unit){
 
+        Log.i("InputDialog", "Opened Input Dialog")
         val dialogBinding = DialogLayoutBinding.inflate(LayoutInflater.from(this))
         val dialog = AlertDialog.Builder(this)
             .setView(dialogBinding.root)
@@ -169,17 +181,17 @@ class MainActivity : AppCompatActivity() {
             .create()
         var selectedDate = java.time.LocalDate.now().toString()
         var selectedTime = "00:00"
-        var notification = false
-        var constant = false
-        var hourbefore = false
-        var daybefore = false
+        var notification = "none"
+        var selectedEventType = "personal"
 
         dialogBinding.NotificationButtonsContainer.visibility = View.GONE
 
         dialogBinding.btnConfirm.setOnClickListener {
             val selectedTitle = dialogBinding.etTitle.text.toString().trim()
             if (selectedTitle != "" && selectedTitle != "Enter Title"){
-                onResult(selectedTitle, selectedDate, selectedTime, notification, listOf(constant, hourbefore, daybefore))
+                Log.i("InputDialog", "Event Created: $selectedTitle, $selectedDate, $selectedTime, $selectedEventType, Notification Enabled? $notification")
+                onResult(selectedTitle, selectedDate, selectedTime, notification, selectedEventType)
+                Log.i("InputDialog", "Closing Input Dialog")
                 dialog.dismiss()
             } else{
                 Toast.makeText(this, "Must enter a title", Toast.LENGTH_SHORT).show()
@@ -213,28 +225,42 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.EnableNotificationCheckBox.setOnClickListener {
             dialogBinding.NotificationButtonsContainer.visibility = if (dialogBinding.EnableNotificationCheckBox.isChecked) View.VISIBLE else View.GONE
-            if (dialogBinding.EnableNotificationCheckBox.isChecked){ notification = true }
-            else{ notification = false }
+            if (dialogBinding.EnableNotificationCheckBox.isChecked){ notification = "default" }
+            else{ notification = "none" }
         }
 
         dialogBinding.ConstantNotifyCheckbox.setOnClickListener {
-            if (dialogBinding.ConstantNotifyCheckbox.isChecked){ constant = true }
-            else{ constant = false }
+            if (dialogBinding.ConstantNotifyCheckbox.isChecked){ notification = "constant" }
+            else{ notification = "default" }
         }
         dialogBinding.HourBeforeNotifyCheckbox.setOnClickListener {
-            if (dialogBinding.HourBeforeNotifyCheckbox.isChecked){ hourbefore = true }
-            else{ hourbefore = false }
+            if (dialogBinding.HourBeforeNotifyCheckbox.isChecked){ notification = "hour" }
+            else{ notification = "default" }
         }
         dialogBinding.DayBeforeNotifyCheckbox.setOnClickListener {
-            if (dialogBinding.DayBeforeNotifyCheckbox.isChecked){ daybefore = true }
-            else{ daybefore = false }
+            if (dialogBinding.DayBeforeNotifyCheckbox.isChecked){ notification = "day" }
+            else{ notification = "default" }
+        }
+
+        val eventTypes = listOf(dialogBinding.HomeEventType,
+                            dialogBinding.WorkEventType,
+                            dialogBinding.FriendEventType,
+                            dialogBinding.PersonalEventType,
+                            dialogBinding.StudyEventType)
+        val typeNames = listOf("home", "work", "friend", "personal", "study")
+        eventTypes.forEachIndexed { index, cardView ->
+            cardView.setOnClickListener {
+                selectedEventType = typeNames[index]
+                eventTypes.forEach { it.strokeColor = Color.TRANSPARENT }
+                cardView.strokeColor = "#9D9D9D".toColorInt()
+            }
         }
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
     }
 
-    private fun scheduleNotification(requestCode: Long, selectDate: String, selectTime: String, selectedTitle: String, notification: Boolean, notifyTypes: List<Boolean>) {
+    private fun scheduleNotification(requestCode: Long, selectDate: String, selectTime: String, selectedTitle: String, notification: String) {
         val datetime = "$selectDate $selectTime"
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         val calendar = Calendar.getInstance()
@@ -251,10 +277,7 @@ class MainActivity : AppCompatActivity() {
                 putExtra("notificationTitle", "Reminder")
                 putExtra("notificationMessage", "It's time to $selectedTitle, get it done")
                 putExtra("requestCode", requestCode.toInt())
-                putExtra("notificationPreference", notification)
-                putExtra("constant", notifyTypes[0])
-                putExtra("hourbefore", notifyTypes[1])
-                putExtra("daybefore", notifyTypes[2])
+                putExtra("notification", notification)
             }
             val pendingIntent = PendingIntent.getBroadcast(this, requestCode.toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
 
