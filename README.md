@@ -6,8 +6,9 @@ Developed just for myself, posting it just to show off my shitty skills.
 
 Feel free to give comments through [my website](https://icefairycirno.github.io/My-Website/), and don't complain about the UI design. I am not a UI/UX designer.
 
-Functions: <progress value="70" max="100">70% Vibe-coded</progress> 70%
-Layouts: <progress value="0" max="100">0% Vibe-coded</progress> 0%
+<progress value="70" max="100">70% Vibe-coded</progress> 70%
+
+<progress value="0" max="100">0% Vibe-coded</progress> 0%
 
 0 cybersecurity, I don't think someone will be interested in my body weight.
 
