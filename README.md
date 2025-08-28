@@ -2,7 +2,7 @@
 
 > This isn't the final version yet, more functions and design will be added.
 
-Developed just for myself, posting it just to show off my shitty skills.
+Developed just for myself, posting it just to show off my shitty skills. Try it out if you want
 
 Feel free to give comments through [my website](https://icefairycirno.github.io/My-Website/), and don't complain about the UI design. I am not a UI/UX designer.
 
