@@ -8,8 +8,10 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -30,6 +32,7 @@ import com.example.todolist.Debugger
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import com.example.todolist.databinding.ItemLayoutBinding
+import androidx.core.net.toUri
 
 
 class MainActivity : AppCompatActivity() {
@@ -95,14 +98,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.AddNewItemButton.setOnClickListener {
-            showInputDialog{title, date, time, notification->
+            showInputDialog{title, date, time, notification, notifyTypes->
                 Log.i("Added TODO Item", "Title: $title, Date: $date, Time: $time")
                 lifecycleScope.launch {
                     val requestCode = eventDao.insert(EventEntity(0, title, date, time))
-                    scheduleNotification(requestCode, date, time, title, notification)
+                    if (notifyTypes[0]){
+                        val nextHour = getNextHourFromCurrent()
+                        scheduleNotification(requestCode, nextHour.first, nextHour.second, title, notification, notifyTypes)
+                    } else if (notifyTypes[1]){
+                        val hourBefore = getPreviousHourDateTime(date, time, "hour")
+                        scheduleNotification(requestCode, hourBefore.first, hourBefore.second, title, notification, notifyTypes)
+                    } else if (notifyTypes[2]) {
+                        val dayBefore = getPreviousHourDateTime(date, time, "day")
+                        scheduleNotification(requestCode, dayBefore.first, dayBefore.second, title, notification, notifyTypes)
+                    } else{
+                        scheduleNotification(requestCode, date, time, title, notification, notifyTypes)
+                    }
                     val updatedList = eventDao.getAllEvents()
                     runOnUiThread { adapter.updateItems(updatedList) }
-                    displayAllEvents(eventDao)
+                    //displayAllEvents(eventDao)
                 }
             }
         }
@@ -146,7 +160,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showInputDialog(onResult: (title: String, date: String, time: String, notification: Boolean) -> Unit){
+    private fun showInputDialog(onResult: (title: String, date: String, time: String, notification: Boolean, notifyTypes: List<Boolean>) -> Unit){
 
         val dialogBinding = DialogLayoutBinding.inflate(LayoutInflater.from(this))
         val dialog = AlertDialog.Builder(this)
@@ -156,13 +170,16 @@ class MainActivity : AppCompatActivity() {
         var selectedDate = java.time.LocalDate.now().toString()
         var selectedTime = "00:00"
         var notification = false
+        var constant = false
+        var hourbefore = false
+        var daybefore = false
 
         dialogBinding.NotificationButtonsContainer.visibility = View.GONE
 
         dialogBinding.btnConfirm.setOnClickListener {
             val selectedTitle = dialogBinding.etTitle.text.toString().trim()
             if (selectedTitle != "" && selectedTitle != "Enter Title"){
-                onResult(selectedTitle, selectedDate, selectedTime, notification)
+                onResult(selectedTitle, selectedDate, selectedTime, notification, listOf(constant, hourbefore, daybefore))
                 dialog.dismiss()
             } else{
                 Toast.makeText(this, "Must enter a title", Toast.LENGTH_SHORT).show()
@@ -196,18 +213,28 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.EnableNotificationCheckBox.setOnClickListener {
             dialogBinding.NotificationButtonsContainer.visibility = if (dialogBinding.EnableNotificationCheckBox.isChecked) View.VISIBLE else View.GONE
-            if (dialogBinding.EnableNotificationCheckBox.isChecked){
-                notification = true
-            } else{
-                notification = false
-            }
+            if (dialogBinding.EnableNotificationCheckBox.isChecked){ notification = true }
+            else{ notification = false }
+        }
+
+        dialogBinding.ConstantNotifyCheckbox.setOnClickListener {
+            if (dialogBinding.ConstantNotifyCheckbox.isChecked){ constant = true }
+            else{ constant = false }
+        }
+        dialogBinding.HourBeforeNotifyCheckbox.setOnClickListener {
+            if (dialogBinding.HourBeforeNotifyCheckbox.isChecked){ hourbefore = true }
+            else{ hourbefore = false }
+        }
+        dialogBinding.DayBeforeNotifyCheckbox.setOnClickListener {
+            if (dialogBinding.DayBeforeNotifyCheckbox.isChecked){ daybefore = true }
+            else{ daybefore = false }
         }
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
     }
 
-    private fun scheduleNotification(requestCode: Long, selectDate: String, selectTime: String, selectedTitle: String, notification: Boolean) {
+    private fun scheduleNotification(requestCode: Long, selectDate: String, selectTime: String, selectedTitle: String, notification: Boolean, notifyTypes: List<Boolean>) {
         val datetime = "$selectDate $selectTime"
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         val calendar = Calendar.getInstance()
@@ -225,6 +252,9 @@ class MainActivity : AppCompatActivity() {
                 putExtra("notificationMessage", "It's time to $selectedTitle, get it done")
                 putExtra("requestCode", requestCode.toInt())
                 putExtra("notificationPreference", notification)
+                putExtra("constant", notifyTypes[0])
+                putExtra("hourbefore", notifyTypes[1])
+                putExtra("daybefore", notifyTypes[2])
             }
             val pendingIntent = PendingIntent.getBroadcast(this, requestCode.toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
 
@@ -235,6 +265,38 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e("ScheduleNotification", "Failed to schedule notification", e)
         }
+    }
+
+    fun getNextHourFromCurrent(): Pair<String, String> {
+        val calendar = Calendar.getInstance() // Gets current time (09:31 AM HKT, August 28, 2025)
+        calendar.add(Calendar.HOUR_OF_DAY, 1) // Add 1 hour
+
+        val dateFormatDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateFormatTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+        val nextDate = dateFormatDate.format(calendar.time)
+        val nextTime = dateFormatTime.format(calendar.time)
+
+        return Pair(nextDate, nextTime)
+    }
+
+    fun getPreviousHourDateTime(dateStr: String, timeStr: String, unit: String): Pair<String, String> {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        val dateTimeStr = "$dateStr $timeStr"
+        val calendar = Calendar.getInstance().apply {
+            time = dateFormat.parse(dateTimeStr) ?: throw IllegalArgumentException("Invalid date or time format")
+        }
+
+        when (unit.lowercase()) {
+            "hour" -> calendar.add(Calendar.HOUR_OF_DAY, -1)
+            "day" -> calendar.add(Calendar.DAY_OF_MONTH, -1)
+            else -> throw IllegalArgumentException("Unit must be 'hour' or 'day'")
+        }
+
+        val previousDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+        val previousTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)
+
+        return Pair(previousDate, previousTime)
     }
 
     private fun displayAllEvents(eventDao: EventDao) {
@@ -249,4 +311,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+
 }
