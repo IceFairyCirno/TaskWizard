@@ -9,5 +9,6 @@ data class EventEntity(
     val date: String,
     val time: String,
     val type: String,
-    val notification: String
+    val notification: String,
+    val weekly: Boolean,
 )

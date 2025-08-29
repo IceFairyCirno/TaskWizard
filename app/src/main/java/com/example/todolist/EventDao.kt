@@ -12,6 +12,15 @@ interface EventDao {
     @Query("SELECT * FROM event")
     suspend fun getAllEvents(): List<EventEntity>
 
+    @Query("SELECT * FROM event WHERE date = :today")
+    suspend fun getTodayEvents(today: String): List<EventEntity>
+
+    @Query("SELECT * FROM event WHERE date IN (:today, :tomorrow, :dayAfterTomorrow)")
+    suspend fun getUpcomingEvents(today: String, tomorrow: String, dayAfterTomorrow: String): List<EventEntity>
+
+    @Query("SELECT * FROM event WHERE weekly = :weekly")
+    suspend fun getWeeklyEvents(weekly: Boolean = true): List<EventEntity>
+
     @Query("SELECT requestCode FROM event WHERE title = :title AND date = :date AND time = :time LIMIT 1")
     suspend fun getCodeByDetail(title: String, date: String, time: String): Long?
 

@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -32,6 +33,8 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import com.example.todolist.databinding.ItemLayoutBinding
 import androidx.core.graphics.toColorInt
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 class MainActivity : AppCompatActivity() {
@@ -84,6 +87,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 Log.i(TAG, "Deleting Event: ${event.title}, ${event.date}, ${event.time}, ${event.type}")
                 eventDao.delete(event)
+                binding.AllTab.performClick()
                 val eventsFromDb = eventDao.getAllEvents()
                 runOnUiThread { adapter.updateItems(eventsFromDb)}
                 Log.i(TAG, "Event Successfully Deleted")
@@ -92,20 +96,47 @@ class MainActivity : AppCompatActivity() {
         binding.List.layoutManager = LinearLayoutManager(this)
         binding.List.adapter = adapter
 
+        val dates = listOf(
+            LocalDate.now(),
+            LocalDate.now().plusDays(1),
+            LocalDate.now().plusDays(2)
+        ).map { it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) }
 
         // Get All Events from the Database then display on screen
         Log.i(TAG, "Reading Database and Displaying Events")
         lifecycleScope.launch {
             //eventDao.clearAllEvents()
-            val eventsFromDb = eventDao.getAllEvents()
+            val eventsFromDb = eventDao.getTodayEvents(dates[0])
             runOnUiThread { adapter.updateItems(eventsFromDb) }
         }
+
+        val tabs = listOf(binding.TodayTab, binding.AllTab, binding.WeeklyTab, binding.UpcomingTab)
+        tabs.forEachIndexed { index, cardView ->
+            cardView.setOnClickListener {
+                tabs.forEach { it.strokeColor = Color.TRANSPARENT }
+                cardView.strokeColor = "#a6ccde".toColorInt()
+                val textView = cardView.getChildAt(1) as TextView
+                binding.CurrentTab.text = textView.text
+
+                lifecycleScope.launch {
+                    val eventsFromDb = when (index) {
+                        0 -> eventDao.getTodayEvents(dates[0])
+                        1 -> eventDao.getAllEvents()
+                        2 -> eventDao.getWeeklyEvents()
+                        3 -> eventDao.getUpcomingEvents(dates[0], dates[1], dates[2])
+                        else -> eventDao.getTodayEvents(dates[0])
+                    }
+                    runOnUiThread { adapter.updateItems(eventsFromDb) }
+                }
+            }
+        }
+
 
         binding.AddNewItemButton.setOnClickListener {
             showInputDialog{title, date, time, notification, eventType->
                 Log.i(TAG, "Attempting to Add Event: ${title}, ${date}, ${time}, $eventType")
                 lifecycleScope.launch {
-                    val event = EventEntity(0, title, date, time, eventType, notification)
+                    val event = EventEntity(0, title, date, time, eventType, notification, false)
                     val requestCode = eventDao.insert(event)
                     Log.i(TAG, "Added Event to Database: ${event.title}, ${event.date}, ${event.time}, ${event.type}")
                     if (event.notification == "constant"){
@@ -125,8 +156,7 @@ class MainActivity : AppCompatActivity() {
                         scheduleNotification(requestCode, date, time, title, notification)
                     }
                     Log.i(TAG, "Updating the Current Events On Screen")
-                    val updatedList = eventDao.getAllEvents()
-                    runOnUiThread { adapter.updateItems(updatedList) }
+                    binding.AllTab.performClick()
                     displayAllEvents(eventDao)
                 }
             }
@@ -136,6 +166,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Log.i(TAG, "Resuming... Updating the list")
         lifecycleScope.launch {
+            binding.AllTab.performClick()
             val eventsFromDb = eventDao.getAllEvents()
             runOnUiThread { adapter.updateItems(eventsFromDb) }
         }
@@ -180,7 +211,7 @@ class MainActivity : AppCompatActivity() {
             .setCancelable(false)
             .create()
         var selectedDate = java.time.LocalDate.now().toString()
-        var selectedTime = "00:00"
+        var selectedTime = SimpleDateFormat("hh:mm", Locale.getDefault()).format(Date(System.currentTimeMillis() + 3600000))
         var notification = "none"
         var selectedEventType = "personal"
 
@@ -192,6 +223,7 @@ class MainActivity : AppCompatActivity() {
                 Log.i("InputDialog", "Event Created: $selectedTitle, $selectedDate, $selectedTime, $selectedEventType, Notification Enabled? $notification")
                 onResult(selectedTitle, selectedDate, selectedTime, notification, selectedEventType)
                 Log.i("InputDialog", "Closing Input Dialog")
+                Toast.makeText(this, "Event Noted", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             } else{
                 Toast.makeText(this, "Must enter a title", Toast.LENGTH_SHORT).show()
